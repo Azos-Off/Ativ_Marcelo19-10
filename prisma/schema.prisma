@@ -1,0 +1,33 @@
+    generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  nome     String
+  email    String   @unique
+  password String
+  role     Role     @default(USER)
+  treinos  Treino[]
+}
+
+model Treino {
+  id         Int    @id @default(autoincrement())
+  titulo     String
+  objetivo   String
+  diaSemana  String
+  exercicios String
+  status     String @default("ATIVO")
+  aluno      User   @relation(fields: [alunoId], references: [id])
+  alunoId    Int
+}

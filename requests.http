@@ -1,0 +1,83 @@
+@url = http://localhost:3000
+
+### Logins (rodar primeiro)
+# @name loginAna
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{ "email": "ana@academia.com", "password": "123456" }
+
+###
+# @name loginAdmin
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{ "email": "admin@academia.com", "password": "123456" }
+
+### T1 - Cadastro válido -> 201 (sem senha na resposta)
+POST {{url}}/auth/register
+Content-Type: application/json
+
+{ "nome": "Carla Dias", "email": "carla@academia.com", "password": "123456" }
+
+### T2 - E-mail repetido -> 409
+POST {{url}}/auth/register
+Content-Type: application/json
+
+{ "nome": "Ana de novo", "email": "ana@academia.com", "password": "123456" }
+
+### T3 - Login com senha errada -> 401
+POST {{url}}/auth/login
+Content-Type: application/json
+
+{ "email": "ana@academia.com", "password": "senhaerrada" }
+
+### T4 - Rota protegida sem token -> 401
+GET {{url}}/auth/me
+
+### T5 - Rota protegida com token válido -> 200
+GET {{url}}/auth/me
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### T6 - Criar treino mandando alunoId no body (ignorado) -> 201
+POST {{url}}/treinos
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{
+  "titulo": "Treino C",
+  "objetivo": "Resistência",
+  "diaSemana": "Sexta",
+  "exercicios": "Corrida 20min",
+  "alunoId": 3
+}
+
+### T7 - Ana alterando treino de outro usuário (id 3 é do Bruno) -> 403
+PUT {{url}}/treinos/3
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{ "titulo": "Tentando alterar" }
+
+### T8 - USER em rota de ADMIN -> 403
+GET {{url}}/users
+Authorization: Bearer {{loginAna.response.body.token}}
+
+### T9 - ADMIN em rota de ADMIN -> 200
+GET {{url}}/users
+Authorization: Bearer {{loginAdmin.response.body.token}}
+
+### T10 - Recurso inexistente -> 404
+PUT {{url}}/treinos/9999
+Authorization: Bearer {{loginAna.response.body.token}}
+Content-Type: application/json
+
+{ "titulo": "Não existe" }
+
+### Extra - Formato errado do header -> 401
+GET {{url}}/auth/me
+Authorization: Token abc123
+
+### Extra - Token inválido -> 401
+GET {{url}}/auth/me
+Authorization: Bearer abc.def.ghi
